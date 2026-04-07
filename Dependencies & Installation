@@ -1,0 +1,12 @@
+# Core Navigation & State
+npm install @react-navigation/native @react-navigation/stack zustand
+
+# Animations & Gestures (The "Feel")
+npm install react-native-reanimated react-native-gesture-handler react-native-vector-icons
+
+# Sensors & UI Components
+npm install expo-sensors expo-notifications @react-native-community/slider
+
+# Persistence (Saves your buddy settings)
+npm install @react-native-async-storage/async-storage
+
