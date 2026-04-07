@@ -1,0 +1,16 @@
+ChatBuddyApp/
+├── android/                # Native Android permissions & manifest
+├── src/
+│   ├── components/
+│   │   ├── BuddyView.js      # The visual character (Head, Body, Eyes)
+│   │   ├── FloatingWidget.js # The Gesture & Reanimated logic
+│   ├── store/
+│   │   └── useBuddyStore.js  # Zustand state (persistence)
+│   ├── services/
+│   │   └── OverlayService.js # Logic for Android System Overlay
+│   └── screens/
+│       ├── HomeScreen.js     # Main Dashboard
+│       └── CustomizeScreen.js # Appearance & Settings UI
+├── App.js                  # Entry point
+└── package.json            # Dependencies
+
