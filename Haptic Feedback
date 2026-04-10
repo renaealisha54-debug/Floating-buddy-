@@ -1,0 +1,38 @@
+
+
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Vibration } from 'react-native';
+
+// --- UPDATED BRAIN (Persistent Store) ---
+const useBuddyStore = create(
+  persist(
+    (set) => ({
+      appearance: {
+        skin: '#E0AC69', 
+        hairColor: '#2c1e1a',
+        clothingColor: '#3498db',
+        expression: 'happy',
+      },
+      settings: {
+        size: 1.2,
+        speed: 1,
+      },
+      updateAppearance: (newAttr) => set((state) => ({ 
+        appearance: { ...state.appearance, ...newAttr } 
+      })),
+      updateSettings: (newSet) => set((state) => ({ 
+        settings: { ...state.settings, ...newSet } 
+      })),
+    }),
+    {
+      name: 'buddy-storage', // unique name for storage
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
+
+// --- ADD TO GESTURE LOGIC (In FloatingBuddy) ---
+// Inside your .onFinalize(() => { ... })
+// Add this line to give the A54 a physical "thud" when it hits the wall:
+runOnJS(Vibration.vibrate)(10); 
