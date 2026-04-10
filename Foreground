@@ -1,0 +1,15 @@
+
+
+// src/services/BackgroundService.js
+import ReactNativeForegroundService from '@supersami/rn-foreground-service';
+
+export const startBuddyService = (buddyName) => {
+  ReactNativeForegroundService.start({
+    id: 1234,
+    title: "Chat Buddy Active",
+    message: `${buddyName} is roaming your screen!`,
+    icon: "ic_launcher",
+    button: true,
+    buttonText: "Stop Buddy",
+  });
+};
