@@ -1,0 +1,45 @@
+
+
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+
+export const BuddyView = ({ appearance, settings }) => {
+  const size = 100 * settings.size;
+
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      {/* 💇 Hair Style */}
+      <View style={[styles.hair, { backgroundColor: appearance.hairColor, height: size * 0.3 }]} />
+      
+      {/* 👤 Head & Face */}
+      <View style={[styles.head, { backgroundColor: appearance.skin }]}>
+        <View style={styles.eyeRow}>
+          {/* Eyes change based on expression */}
+          <View style={appearance.expression === 'sleepy' ? styles.eyeClosed : styles.eyeOpen} />
+          <View style={appearance.expression === 'sleepy' ? styles.eyeClosed : styles.eyeOpen} />
+        </View>
+        
+        {/* 👄 Mouth Expression */}
+        {appearance.expression === 'happy' && <View style={styles.mouthHappy} />}
+        {appearance.expression === 'sad' && <View style={styles.mouthSad} />}
+        {appearance.expression === 'surprised' && <View style={styles.mouthO} />}
+      </View>
+
+      {/* 👕 Clothing Body */}
+      <View style={[styles.body, { backgroundColor: appearance.clothingColor, height: size * 0.4 }]} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { alignItems: 'center', justifyContent: 'center' },
+  head: { width: '50%', height: '50%', borderRadius: 100, zIndex: 2, alignItems: 'center', paddingTop: 10 },
+  hair: { width: '55%', position: 'absolute', top: 5, borderTopLeftRadius: 50, borderTopRightRadius: 50, zIndex: 3 },
+  eyeRow: { flexDirection: 'row', justifyContent: 'space-around', width: '60%', marginBottom: 5 },
+  eyeOpen: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#000' },
+  eyeClosed: { width: 8, height: 2, backgroundColor: '#000', marginTop: 3 },
+  mouthHappy: { width: 12, height: 6, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderWidth: 2, borderTopWidth: 0 },
+  mouthSad: { width: 12, height: 6, borderTopLeftRadius: 10, borderTopRightRadius: 10, borderWidth: 2, borderBottomWidth: 0, marginĺTop: 5 },
+  mouthO: { width: 8, height: 8, borderRadius: 4, borderWidth: 2 },
+  body: { width: '60%', borderTopLeftRadius: 15, borderTopRightRadius: 15, marginTop: -5, zIndex: 1 }
+});
