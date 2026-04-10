@@ -1,0 +1,15 @@
+
+
+// Example: If triggering from a gesture or sensor listener
+useAnimatedReaction(
+  () => someSensorValue.value,
+  (result) => {
+    if (result > SHAKE_THRESHOLD) {
+      // Logic on UI thread
+      translateY.value = withSpring(-50); 
+      
+      // If you need to trigger a JS-side function (like a sound or vibration)
+      runOnJS(myJavascriptFunction)();
+    }
+  }
+);
