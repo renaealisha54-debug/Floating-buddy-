@@ -1,0 +1,205 @@
+
+
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, Dimensions, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withSequence, 
+  withTiming,
+  runOnJS
+} from 'react-native-reanimated';
+import { create } from 'zustand';
+import { Accelerometer } from 'expo-sensors';
+import Slider from '@react-native-community/slider';
+import { Settings, Palette, activity } from 'lucide-react-native';
+
+// --- 1. STATE MANAGEMENT (Zustand) ---
+const useBuddyStore = create((set) => ({
+  appearance: {
+    skin: '#E0AC69', // Deep Tan / Not White
+    hairColor: '#2c1e1a',
+    clothingColor: '#3498db',
+    expression: 'happy',
+  },
+  settings: {
+    size: 1.2,
+    speed: 1,
+    isRoaming: true,
+  },
+  updateAppearance: (newAttr) => set((state) => ({ appearance: { ...state.appearance, ...newAttr } })),
+  updateSettings: (newSet) => set((state) => ({ settings: { ...state.settings, ...newSet } })),
+}));
+
+// --- 2. THE VISUAL COMPONENT (BuddyView) ---
+const BuddyView = ({ appearance, size }) => {
+  const baseSize = 80 * size;
+  
+  return (
+    <View style={{ alignItems: 'center', width: baseSize, height: baseSize }}>
+      {/* Hair Style */}
+      <View style={[styles.hair, { backgroundColor: appearance.hairColor, width: baseSize * 0.7, height: baseSize * 0.3 }]} />
+      
+      {/* Face/Head */}
+      <View style={[styles.head, { backgroundColor: appearance.skin, width: baseSize * 0.6, height: baseSize * 0.6 }]}>
+        <View style={styles.eyeRow}>
+          <View style={styles.eye} />
+          <View style={styles.eye} />
+        </View>
+        <View style={appearance.expression === 'happy' ? styles.mouthHappy : styles.mouthO} />
+      </View>
+
+      {/* Shirt */}
+      <View style={[styles.shirt, { backgroundColor: appearance.clothingColor, width: baseSize * 0.8, height: baseSize * 0.4 }]} />
+    </View>
+  );
+};
+
+// --- 3. THE MAIN APP ---
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+export default function App() {
+  const { appearance, settings, updateAppearance, updateSettings } = useBuddyStore();
+  const [activeTab, setActiveTab] = useState('style');
+
+  // Shared values for animation
+  const translateX = useSharedValue(SCREEN_WIDTH - 120);
+  const translateY = useSharedValue(SCREEN_HEIGHT / 3);
+  const scale = useSharedValue(1);
+
+  // --- SENSOR LOGIC (Galaxy A54 Accelerometer) ---
+  useEffect(() => {
+    const subscription = Accelerometer.addListener(({ x, y, z }) => {
+      const totalForce = Math.abs(x) + Math.abs(y) + Math.abs(z);
+      if (totalForce > 2.8) { // Shake detected
+        translateY.value = withSequence(
+          withSpring(translateY.value - 100),
+          withSpring(translateY.value)
+        );
+      }
+    });
+    Accelerometer.setUpdateInterval(100);
+    return () => subscription.remove();
+  }, []);
+
+  // --- GESTURE LOGIC (Drag & Snap) ---
+  const dragGesture = Gesture.Pan()
+    .onBegin(() => { scale.value = withSpring(1.2); })
+    .onUpdate((event) => {
+      translateX.value = event.absoluteX - (40 * settings.size);
+      translateY.value = event.absoluteY - (40 * settings.size);
+    })
+    .onFinalize(() => {
+      scale.value = withSpring(1);
+      // Snap to nearest side edge
+      const snapX = translateX.value > SCREEN_WIDTH / 2 ? SCREEN_WIDTH - (90 * settings.size) : 10;
+      translateX.value = withSpring(snapX);
+    });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }, { translateY: translateY.value }, { scale: scale.value }],
+  }));
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Buddy Dashboard</Text>
+          <Text style={styles.headerSub}>Shake your A54 to make him jump!</Text>
+        </View>
+
+        {/* Tab Navigation */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity onPress={() => setActiveTab('style')} style={[styles.tab, activeTab === 'style' && styles.activeTab]}>
+             <Text style={activeTab === 'style' ? styles.activeTabText : styles.tabText}>Appearance</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setActiveTab('config')} style={[styles.tab, activeTab === 'config' && styles.activeTab]}>
+             <Text style={activeTab === 'config' ? styles.activeTabText : styles.tabText}>Settings</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {activeTab === 'style' ? (
+            <View style={styles.card}>
+              <Text style={styles.label}>Skin Tone</Text>
+              <View style={styles.row}>
+                {['#FFDBAC', '#E0AC69', '#8D5524', '#C68642'].map(color => (
+                  <TouchableOpacity 
+                    key={color} 
+                    style={[styles.colorCircle, { backgroundColor: color }, appearance.skin === color && styles.selected]} 
+                    onPress={() => updateAppearance({ skin: color })}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.label}>Outfit Color</Text>
+              <View style={styles.row}>
+                {['#3498db', '#e74c3c', '#2ecc71', '#f1c40f'].map(color => (
+                  <TouchableOpacity 
+                    key={color} 
+                    style={[styles.colorCircle, { backgroundColor: color }, appearance.clothingColor === color && styles.selected]} 
+                    onPress={() => updateAppearance({ clothingColor: color })}
+                  />
+                ))}
+              </View>
+            </View>
+          ) : (
+            <View style={styles.card}>
+              <Text style={styles.label}>Buddy Size: {settings.size.toFixed(1)}x</Text>
+              <Slider 
+                minimumValue={0.5} maximumValue={2.5} 
+                value={settings.size} 
+                onValueChange={(v) => updateSettings({ size: v })}
+                minimumTrackTintColor="#3498db"
+              />
+
+              <Text style={styles.label}>Roaming Speed</Text>
+              <Slider 
+                minimumValue={0.5} maximumValue={3} 
+                value={settings.speed} 
+                onValueChange={(v) => updateSettings({ speed: v })}
+                minimumTrackTintColor="#e74c3c"
+              />
+            </View>
+          )}
+        </ScrollView>
+
+        {/* THE FLOATING BUDDY */}
+        <GestureDetector gesture={dragGesture}>
+          <Animated.View style={[styles.floatingContainer, animatedStyle]}>
+            <BuddyView appearance={appearance} size={settings.size} />
+          </Animated.View>
+        </GestureDetector>
+      </SafeAreaView>
+    </GestureHandlerRootView>
+  );
+}
+
+// --- 4. STYLING ---
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F8F9FE' },
+  header: { padding: 25, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
+  headerTitle: { fontSize: 26, fontWeight: '800', color: '#1a1a1a' },
+  headerSub: { fontSize: 14, color: '#666', marginTop: 4 },
+  tabContainer: { flexDirection: 'row', padding: 15, gap: 10 },
+  tab: { flex: 1, padding: 12, borderRadius: 12, backgroundColor: '#eee', alignItems: 'center' },
+  activeTab: { backgroundColor: '#1a1a1a' },
+  tabText: { color: '#666', fontWeight: '600' },
+  activeTabText: { color: '#fff', fontWeight: '600' },
+  scrollContent: { padding: 15 },
+  card: { backgroundColor: '#fff', padding: 20, borderRadius: 20, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8 },
+  label: { fontSize: 16, fontWeight: '700', marginBottom: 12, color: '#333', marginTop: 10 },
+  row: { flexDirection: 'row', gap: 12, marginBottom: 15 },
+  colorCircle: { width: 45, height: 45, borderRadius: 22.5, borderWidth: 2, borderColor: 'transparent' },
+  selected: { borderColor: '#000', transform: [{ scale: 1.1 }] },
+  floatingContainer: { position: 'absolute', zIndex: 1000 },
+  head: { borderRadius: 100, zIndex: 2, alignItems: 'center', justifyContent: 'center', marginTop: -5 },
+  hair: { borderTopLeftRadius: 50, borderTopRightRadius: 50, zIndex: 3 },
+  eyeRow: { flexDirection: 'row', gap: 8, marginBottom: 4 },
+  eye: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#000' },
+  mouthHappy: { width: 14, height: 7, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderWidth: 2, borderTopWidth: 0 },
+  mouthO: { width: 8, height: 8, borderRadius: 4, borderWidth: 2 },
+  shirt: { borderTopLeftRadius: 15, borderTopRightRadius: 15, marginTop: -5, zIndex: 1 },
+});
