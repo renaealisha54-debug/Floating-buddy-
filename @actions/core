@@ -1,0 +1,3 @@
+
+
+npx @vercel/ncc build path/to/your/input.ts -o dist --minify --no-cache
