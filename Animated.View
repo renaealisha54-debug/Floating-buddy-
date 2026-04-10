@@ -1,0 +1,6 @@
+
+
+<Animated.View style={[styles.buddyBody, animatedStyle]}>
+  {/* Your Buddy Avatar SVG or Image goes here */}
+  <Text>🤖</Text> 
+</Animated.View>
