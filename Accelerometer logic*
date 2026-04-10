@@ -1,0 +1,11 @@
+
+
+// Add this inside your FloatingWidget.js
+const triggerJump = () => {
+  translateY.value = withSequence(
+    withSpring(translateY.value - 50), // Jump up
+    withSpring(translateY.value)       // Land
+  );
+  // Add a little vibration for the Galaxy A54
+  ReactNativeHapticFeedback.trigger("impactLight"); 
+};
