@@ -1,0 +1,16 @@
+// Inside your component
+useEffect(() => {
+  const subscription = Accelerometer.addListener(({ x, y, z }) => {
+    // Calculate total acceleration (G-force)
+    const acceleration = Math.sqrt(x ** 2 + y ** 2 + z ** 2);
+    
+    // Threshold of ~2.5 to 3.0 is usually a "firm shake"
+    if (acceleration > 2.5) {
+      triggerJump(); 
+    }
+  });
+
+  Accelerometer.setUpdateInterval(100); // Check every 100ms
+
+  return () => subscription.remove();
+}, []);
